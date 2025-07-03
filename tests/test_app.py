@@ -114,7 +114,7 @@ def test_updat_user_integrity_error(client, user):
             'username': 'test2',
             'email': 'test2@test.com',
             'password': 'secret',
-        }
+        },
     )
     response = client.put(
         '/users/1',
@@ -126,9 +126,7 @@ def test_updat_user_integrity_error(client, user):
     )
 
     assert response.status_code == HTTPStatus.CONFLICT
-    assert response.json() == {
-        'detail': 'username or email already exists'
-    }
+    assert response.json() == {'detail': 'username or email already exists'}
 
 
 def test_updat_user_not_found_404(client):
@@ -151,9 +149,7 @@ def test_delete_user(client, user):
     response = client.delete('/users/1')
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
-        'message': 'user deleted'
-    }
+    assert response.json() == {'message': 'user deleted'}
 
 
 def test_delete_user_not_found_404(client):

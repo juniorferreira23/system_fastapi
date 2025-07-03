@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from src.database import get_session
 from src.models import User
 from src.schemas import Message, UserList, UserPublic, UserSchema
+from src.security import get_password_hash
 
 app = FastAPI()
 
@@ -36,6 +37,7 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
                 status_code=HTTPStatus.CONFLICT, detail='email already exists'
             )
 
+    user.password = get_password_hash(user.password)
     db_user = User(**user.model_dump())
     session.add(db_user)
     session.commit()
@@ -75,6 +77,7 @@ def update_user(
             status_code=HTTPStatus.NOT_FOUND, detail='user not found'
         )
 
+    user.password = get_password_hash(user.password)
     user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         setattr(db_user, key, value)
@@ -87,7 +90,7 @@ def update_user(
     except IntegrityError:
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
-            detail='username or email already exists'
+            detail='username or email already exists',
         )
 
 
