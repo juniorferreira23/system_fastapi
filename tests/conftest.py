@@ -11,6 +11,7 @@ from src.app import app
 from src.database import get_session
 from src.models import User, table_registry
 from src.security import get_password_hash
+from src.settings import Settings
 
 
 @pytest.fixture
@@ -43,6 +44,8 @@ def _mock_db_time(*, model, time=datetime.now()):
     def fake_time_hook(mapper, connection, target):
         if hasattr(target, 'created_at'):
             target.created_at = time
+        if hasattr(target, 'updated_at'):
+            target.updated_at = time
 
     event.listen(model, 'before_insert', fake_time_hook)
     yield time
@@ -73,8 +76,13 @@ def user(session):
 @pytest.fixture
 def token(client: TestClient, user):
     response = client.post(
-        '/token',
+        '/auth/token',
         data={'username': user.username, 'password': user.clean_password},
     )
 
     return response.json()['access_token']
+
+
+@pytest.fixture
+def settings():
+    return Settings()  # type: ignore

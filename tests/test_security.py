@@ -3,13 +3,12 @@ from http import HTTPStatus
 from jwt import decode
 
 from src.security import create_access_token
-from src.settings import Settings
 
 
-def test_create_access_token():
+def test_create_access_token(settings):
     data = {'sub': 'test'}
     token = create_access_token(data)
-    decoded = decode(token, Settings().SECRET_KEY, Settings().ALGORITHM)  # type: ignore
+    decoded = decode(token, settings.SECRET_KEY, settings.ALGORITHM)
 
     assert decoded['sub'] == data['sub']
     assert 'exp' in decoded
