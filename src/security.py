@@ -14,7 +14,8 @@ from src.models import User
 from src.settings import Settings
 
 pwd_context = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/token')
+settings = Settings()  # type: ignore
 
 
 def get_password_hash(password: str):
@@ -29,12 +30,14 @@ def create_access_token(data: dict):
     to_enconde = data.copy()
 
     expire = datetime.now(tz=ZoneInfo('UTC')) + timedelta(
-        minutes=Settings().ACESS_TOKEN_EXPIRE_MINUTES  # type: ignore
+        minutes=settings.ACESS_TOKEN_EXPIRE_MINUTES
     )
 
     to_enconde.update({'exp': expire})
     encode_jwt = encode(
-        to_enconde, Settings().SECRET_KEY, Settings().ALGORITHM  # type: ignore
+        to_enconde,
+        settings.SECRET_KEY,
+        settings.ALGORITHM,
     )
     return encode_jwt
 
@@ -51,7 +54,9 @@ def get_current_user(
 
     try:
         payload = decode(
-            token, Settings().SECRET_KEY, algorithms=[Settings().ALGORITHM]  # type: ignore
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
         )
         subject_username = payload.get('sub')
 
