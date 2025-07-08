@@ -11,5 +11,5 @@ app.include_router(users.router)
 
 
 @app.get('/', status_code=HTTPStatus.OK)
-def read_root():
+async def read_root():
     return {'message': 'Hello world!'}
