@@ -11,6 +11,7 @@ from src.models import User
 from src.schemas import Token
 from src.security import (
     create_access_token,
+    get_current_user,
     verify_password,
 )
 
@@ -18,6 +19,7 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 
 OAuth2FormAnnotated = Annotated[OAuth2PasswordRequestForm, Depends()]
 SessionAnnotated = Annotated[AsyncSession, Depends(get_session)]
+CurrentUserAnnotated = Annotated[User, Depends(get_current_user)]
 
 
 @router.post('/token', status_code=HTTPStatus.OK, response_model=Token)
@@ -44,3 +46,10 @@ async def login_for_acess_token(
     access_token = create_access_token({'sub': user.username})
 
     return {'access_token': access_token, 'token_type': 'Bearer'}
+
+
+@router.post('/refresh_token', status_code=HTTPStatus.OK, response_model=Token)
+def refresh_token(current_user: CurrentUserAnnotated):
+    new_access_token = create_access_token(data={'sub': current_user.username})
+
+    return {'access_token': new_access_token, 'token_type': 'Bearer'}
