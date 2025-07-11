@@ -9,6 +9,7 @@ from src.database import get_session
 from src.models import Todo, User
 from src.schemas import (
     FilterTodo,
+    Message,
     TodoList,
     TodoPublic,
     TodoSchema,
@@ -88,3 +89,20 @@ async def update_todo(
     await session.refresh(db_todo)
 
     return db_todo
+
+
+@router.delete('/{todo_id}', status_code=HTTPStatus.OK, response_model=Message)
+async def delete_todo(todo_id: int, session: SessionAnnotated):
+    todo = await session.scalar(
+        select(Todo).where(Todo.id == todo_id)
+    )
+
+    if not todo:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='task not found'
+        )
+
+    await session.delete(todo)
+    await session.commit()
+
+    return {'message': 'task deleted'}
