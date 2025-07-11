@@ -38,7 +38,7 @@ async def create_todo(
 async def read_todos(
     todo_filter: Annotated[FilterTodo, Query()],
     session: SessionAnnotated,
-    user: CurrentUserAnnotated
+    user: CurrentUserAnnotated,
 ):
     query = select(Todo).where(Todo.user_id == user.id)
 
