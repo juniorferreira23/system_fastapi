@@ -1,13 +1,19 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_session
 from src.models import Todo, User
-from src.schemas import FilterTodo, TodoList, TodoPublic, TodoSchema
+from src.schemas import (
+    FilterTodo,
+    TodoList,
+    TodoPublic,
+    TodoSchema,
+    TodoUpdated,
+)
 from src.security import get_current_user
 
 router = APIRouter(prefix='/todos', tags=['todos'])
@@ -58,3 +64,27 @@ async def read_todos(
     )
 
     return {'todos': todos.all()}
+
+
+@router.patch(
+    '/{todo_id}', status_code=HTTPStatus.OK, response_model=TodoPublic
+)
+async def update_todo(
+    todo_id: int, todo: TodoUpdated, session: SessionAnnotated
+):
+    db_todo = await session.scalar(select(Todo).where(Todo.id == todo_id))
+
+    if not db_todo:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='task not found'
+        )
+
+    todo_data = todo.model_dump(exclude_unset=True)
+    for key, value in todo_data.items():
+        setattr(db_todo, key, value)
+
+    session.add(db_todo)
+    await session.commit()
+    await session.refresh(db_todo)
+
+    return db_todo
