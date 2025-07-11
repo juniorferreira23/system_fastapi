@@ -1,6 +1,21 @@
 from http import HTTPStatus
 
-from src.models import TodoState
+import factory
+import factory.fuzzy
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.models import Todo, TodoState, User
+
+
+class TodoFactory(factory.base.Factory):
+    class Meta:  # type: ignore
+        model = Todo
+
+    title = factory.faker.Faker('text')
+    description = factory.faker.Faker('text')
+    state = factory.fuzzy.FuzzyChoice(TodoState)
+    user_id = 1
 
 
 def test_create_todo(client, token):
@@ -21,3 +36,143 @@ def test_create_todo(client, token):
         'description': 'test desc',
         'state': 'draft',
     }
+
+
+@pytest.mark.asyncio
+async def test_read_todos(session: AsyncSession, user: User, client, token):
+    expected_todos = 5
+    session.add_all(TodoFactory.create_batch(expected_todos, user_id=user.id))
+    await session.commit()
+
+    response = client.get(
+        '/todos',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert len(response.json()['todos']) == expected_todos
+
+
+@pytest.mark.asyncio
+async def test_read_todos_pagination(
+    session: AsyncSession, user: User, client, token
+):
+    expected_todos = 2
+    session.add_all(
+        TodoFactory.create_batch(5, user_id=user.id)
+    )
+    await session.commit()
+
+    response = client.get(
+        '/todos/?offiset=1&limit=2',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert len(response.json()['todos']) == expected_todos
+
+
+@pytest.mark.asyncio
+async def test_read_todos_by_title_filter(
+    session: AsyncSession, user: User, client, token
+):
+    expected_todos = 5
+    session.add_all(
+        TodoFactory.create_batch(
+            expected_todos, user_id=user.id, title='title todo 1'
+        )
+    )
+    session.add_all(
+        TodoFactory.create_batch(
+            2, user_id=user.id, title='title todo 2'
+        )
+    )
+    await session.commit()
+
+    response = client.get(
+        '/todos/?title=title todo 1',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert len(response.json()['todos']) == expected_todos
+
+
+@pytest.mark.asyncio
+async def test_read_todos_by_description_filter(
+    session: AsyncSession, user: User, client, token
+):
+    expected_todos = 5
+    session.add_all(
+        TodoFactory.create_batch(
+            expected_todos, user_id=user.id, description='desc todo 1'
+        )
+    )
+    session.add_all(
+        TodoFactory.create_batch(
+            2, user_id=user.id, title='title todo 2'
+        )
+    )
+    await session.commit()
+
+    response = client.get(
+        '/todos/?description=desc todo 1',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert len(response.json()['todos']) == expected_todos
+
+
+@pytest.mark.asyncio
+async def test_read_todos_by_state_filter(
+    session: AsyncSession, user: User, client, token
+):
+    expected_todos = 5
+    session.add_all(
+        TodoFactory.create_batch(
+            expected_todos, user_id=user.id, state=TodoState.todo
+        )
+    )
+    session.add_all(
+        TodoFactory.create_batch(
+            2, user_id=user.id, state=TodoState.done
+        )
+    )
+    await session.commit()
+
+    response = client.get(
+        '/todos/?state=todo',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert len(response.json()['todos']) == expected_todos
+
+
+@pytest.mark.asyncio
+async def test_read_todos_combination_filters(
+    session: AsyncSession, user: User, client, token
+):
+    expected_todos = 5
+    session.add_all(
+        TodoFactory.create_batch(
+            expected_todos,
+            user_id=user.id,
+            title='test title',
+            description='test desc',
+            state=TodoState.todo
+        )
+    )
+    session.add_all(
+        TodoFactory.create_batch(
+            2,
+            user_id=user.id,
+            title='other todo',
+            description='other desc',
+            state=TodoState.done
+        )
+    )
+    await session.commit()
+
+    response = client.get(
+        '/todos/?title=test title&description=test desc&state=todo',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert len(response.json()['todos']) == expected_todos
