@@ -102,10 +102,14 @@ def settings():
     return Settings()  # type: ignore
 
 
-class UserFactory(factory.Factory):  # type: ignore
+class UserFactory(factory.base.Factory):
     class Meta:  # type: ignore
         model = User
 
-    username = factory.Sequence(lambda n: f'test{n}')  # type: ignore
-    email = factory.LazyAttribute(lambda obj: f'{obj.username}@test.com')  # type: ignore
-    password = factory.LazyAttribute(lambda obj: f'{obj.username}')  # type: ignore
+    username = factory.declarations.Sequence(lambda n: f'test{n}')
+    email = factory.declarations.LazyAttribute(
+        lambda obj: f'{obj.username}@test.com'
+    )
+    password = factory.declarations.LazyAttribute(
+        lambda obj: f'{obj.username}'
+    )

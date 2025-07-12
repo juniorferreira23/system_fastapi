@@ -174,7 +174,7 @@ async def test_update_todo(client, user: User, session: AsyncSession, token):
         title='test todo',
         description='test desc',
         state=TodoState.todo,
-        user_id=user.id
+        user_id=user.id,
     )
 
     session.add(todo)
@@ -187,8 +187,8 @@ async def test_update_todo(client, user: User, session: AsyncSession, token):
         json={
             'title': 'test2 todo2',
             'description': 'test2 desc2',
-            'state': 'todo'
-        }
+            'state': 'todo',
+        },
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -196,7 +196,7 @@ async def test_update_todo(client, user: User, session: AsyncSession, token):
         'id': 1,
         'title': 'test2 todo2',
         'description': 'test2 desc2',
-        'state': 'todo'
+        'state': 'todo',
     }
 
 
@@ -208,8 +208,8 @@ async def test_update_todo_not_found(client, token):
         json={
             'title': 'test2 todo2',
             'description': 'test2 desc2',
-            'state': 'todo'
-        }
+            'state': 'todo',
+        },
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
@@ -222,7 +222,7 @@ async def test_delete_todo(session: AsyncSession, user: User, client, token):
         title='test todo',
         description='test desc',
         state=TodoState.todo,
-        user_id=user.id
+        user_id=user.id,
     )
 
     session.add(todo)
@@ -230,8 +230,7 @@ async def test_delete_todo(session: AsyncSession, user: User, client, token):
     await session.refresh(todo)
 
     response = client.delete(
-        f'/todos/{todo.id}',
-        headers={'Authorization': f'Bearer {token}'}
+        f'/todos/{todo.id}', headers={'Authorization': f'Bearer {token}'}
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -246,7 +245,7 @@ async def test_delete_todo_not_found(
         title='test todo',
         description='test desc',
         state=TodoState.todo,
-        user_id=user.id
+        user_id=user.id,
     )
 
     session.add(todo)
@@ -254,8 +253,7 @@ async def test_delete_todo_not_found(
     await session.refresh(todo)
 
     response = client.delete(
-        f'/todos/{todo.id + 1}',
-        headers={'Authorization': f'Bearer {token}'}
+        f'/todos/{todo.id + 1}', headers={'Authorization': f'Bearer {token}'}
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND

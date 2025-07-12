@@ -93,9 +93,7 @@ async def update_todo(
 
 @router.delete('/{todo_id}', status_code=HTTPStatus.OK, response_model=Message)
 async def delete_todo(todo_id: int, session: SessionAnnotated):
-    todo = await session.scalar(
-        select(Todo).where(Todo.id == todo_id)
-    )
+    todo = await session.scalar(select(Todo).where(Todo.id == todo_id))
 
     if not todo:
         raise HTTPException(
