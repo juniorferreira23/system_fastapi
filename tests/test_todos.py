@@ -217,6 +217,38 @@ async def test_update_todo_not_found(client, token):
 
 
 @pytest.mark.asyncio
+async def test_update_todo_other_user(
+    session: AsyncSession,
+    client,
+    token,
+    other_user: User
+):
+    todo = Todo(
+        title='test todo',
+        description='test desc',
+        state=TodoState.todo,
+        user_id=other_user.id,
+    )
+
+    session.add(todo)
+    await session.commit()
+    await session.refresh(todo)
+
+    response = client.patch(
+        f'/todos/{todo.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'title': 'test2 todo2',
+            'description': 'test2 desc2',
+            'state': 'todo',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'task not found'}
+
+
+@pytest.mark.asyncio
 async def test_delete_todo(session: AsyncSession, user: User, client, token):
     todo = Todo(
         title='test todo',
@@ -258,3 +290,29 @@ async def test_delete_todo_not_found(
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'task not found'}
+
+
+@pytest.mark.asyncio
+async def test_delete_todo_other_user(
+    session: AsyncSession, client, token, other_user: User
+):
+    todo_other_user = Todo(
+        title='test todo',
+        description='test desc',
+        state=TodoState.todo,
+        user_id=other_user.id,
+    )
+
+    session.add(todo_other_user)
+    await session.commit()
+    await session.refresh(todo_other_user)
+
+    response = client.delete(
+        f'/todos/{todo_other_user.id}',
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {
+        'detail': 'task not found'
+    }

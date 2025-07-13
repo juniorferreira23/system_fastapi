@@ -71,9 +71,14 @@ async def read_todos(
     '/{todo_id}', status_code=HTTPStatus.OK, response_model=TodoPublic
 )
 async def update_todo(
-    todo_id: int, todo: TodoUpdated, session: SessionAnnotated
+    todo_id: int,
+    todo: TodoUpdated,
+    session: SessionAnnotated,
+    user: CurrentUserAnnotated
 ):
-    db_todo = await session.scalar(select(Todo).where(Todo.id == todo_id))
+    db_todo = await session.scalar(
+        select(Todo).where(Todo.user_id == user.id, Todo.id == todo_id)
+    )
 
     if not db_todo:
         raise HTTPException(
@@ -92,8 +97,14 @@ async def update_todo(
 
 
 @router.delete('/{todo_id}', status_code=HTTPStatus.OK, response_model=Message)
-async def delete_todo(todo_id: int, session: SessionAnnotated):
-    todo = await session.scalar(select(Todo).where(Todo.id == todo_id))
+async def delete_todo(
+    todo_id: int,
+    session: SessionAnnotated,
+    user: CurrentUserAnnotated
+):
+    todo = await session.scalar(
+        select(Todo).where(Todo.user_id == user.id, Todo.id == todo_id)
+    )
 
     if not todo:
         raise HTTPException(
