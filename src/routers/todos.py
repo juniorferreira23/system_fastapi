@@ -70,7 +70,7 @@ async def read_todos(
 @router.patch(
     '/{todo_id}', status_code=HTTPStatus.OK, response_model=TodoPublic
 )
-async def update_todo(
+async def patch_todo(
     todo_id: int,
     todo: TodoUpdated,
     session: SessionAnnotated,

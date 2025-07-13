@@ -169,7 +169,7 @@ async def test_read_todos_combination_filters(
 
 
 @pytest.mark.asyncio
-async def test_update_todo(client, user: User, session: AsyncSession, token):
+async def test_patch_todo(client, user: User, session: AsyncSession, token):
     todo = Todo(
         title='test todo',
         description='test desc',
@@ -201,7 +201,7 @@ async def test_update_todo(client, user: User, session: AsyncSession, token):
 
 
 @pytest.mark.asyncio
-async def test_update_todo_not_found(client, token):
+async def test_patch_todo_not_found(client, token):
     response = client.patch(
         '/todos/10',
         headers={'Authorization': f'Bearer {token}'},
@@ -217,7 +217,7 @@ async def test_update_todo_not_found(client, token):
 
 
 @pytest.mark.asyncio
-async def test_update_todo_other_user(
+async def test_patch_todo_other_user(
     session: AsyncSession,
     client,
     token,
