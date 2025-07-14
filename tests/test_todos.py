@@ -18,16 +18,17 @@ class TodoFactory(factory.base.Factory):
     user_id = 1
 
 
-def test_create_todo(client, token):
-    response = client.post(
-        '/todos',
-        headers={'Authorization': f'Bearer {token}'},
-        json={
-            'title': 'test title',
-            'description': 'test desc',
-            'state': TodoState.draft,
-        },
-    )
+def test_create_todo(client, token, mock_db_time):
+    with mock_db_time(model=Todo) as time:
+        response = client.post(
+            '/todos',
+            headers={'Authorization': f'Bearer {token}'},
+            json={
+                'title': 'test title',
+                'description': 'test desc',
+                'state': 'draft',
+            },
+        )
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
@@ -35,6 +36,8 @@ def test_create_todo(client, token):
         'title': 'test title',
         'description': 'test desc',
         'state': 'draft',
+        'created_at': time.isoformat(),
+        'updated_at': time.isoformat(),
     }
 
 
@@ -169,17 +172,19 @@ async def test_read_todos_combination_filters(
 
 
 @pytest.mark.asyncio
-async def test_patch_todo(client, user: User, session: AsyncSession, token):
-    todo = Todo(
-        title='test todo',
-        description='test desc',
-        state=TodoState.todo,
-        user_id=user.id,
-    )
+async def test_patch_todo(
+    client, user: User, session: AsyncSession, token, mock_db_time
+):
+    with mock_db_time(model=Todo) as time:
+        todo = Todo(
+            title='test todo',
+            description='test desc',
+            state=TodoState.todo,
+            user_id=user.id,
+        )
 
-    session.add(todo)
-    await session.commit()
-    await session.refresh(todo)
+        session.add(todo)
+        await session.commit()
 
     response = client.patch(
         f'/todos/{todo.id}',
@@ -191,12 +196,16 @@ async def test_patch_todo(client, user: User, session: AsyncSession, token):
         },
     )
 
+    await session.refresh(todo)
+
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'id': 1,
         'title': 'test2 todo2',
         'description': 'test2 desc2',
         'state': 'todo',
+        'created_at': time.isoformat(),
+        'updated_at': todo.updated_at.isoformat(),
     }
 
 
@@ -218,10 +227,7 @@ async def test_patch_todo_not_found(client, token):
 
 @pytest.mark.asyncio
 async def test_patch_todo_other_user(
-    session: AsyncSession,
-    client,
-    token,
-    other_user: User
+    session: AsyncSession, client, token, other_user: User
 ):
     todo = Todo(
         title='test todo',
@@ -309,10 +315,8 @@ async def test_delete_todo_other_user(
 
     response = client.delete(
         f'/todos/{todo_other_user.id}',
-        headers={'Authorization': f'Bearer {token}'}
+        headers={'Authorization': f'Bearer {token}'},
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {
-        'detail': 'task not found'
-    }
+    assert response.json() == {'detail': 'task not found'}
