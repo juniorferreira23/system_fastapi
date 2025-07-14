@@ -172,6 +172,33 @@ async def test_read_todos_combination_filters(
 
 
 @pytest.mark.asyncio
+async def test_read_todos_checking_fields(
+    user: User, session: AsyncSession, client, token, mock_db_time
+):
+    with mock_db_time(model=Todo) as time:
+        todo = TodoFactory(user_id=user.id)
+        session.add(todo)
+        await session.commit()
+        await session.refresh(todo)
+
+    response = client.get(
+        '/todos', headers={'Authorization': f'Bearer {token}'}
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['todos'] == [
+        {
+            'id': todo.id,
+            'title': todo.title,
+            'description': todo.description,
+            'state': todo.state,
+            'created_at': time.isoformat(),
+            'updated_at': time.isoformat(),
+        }
+    ]
+
+
+@pytest.mark.asyncio
 async def test_patch_todo(
     client, user: User, session: AsyncSession, token, mock_db_time
 ):
