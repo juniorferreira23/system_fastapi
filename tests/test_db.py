@@ -75,3 +75,21 @@ async def test_create_todo_relationship(session: AsyncSession, user: User):
 
     assert db_user is not None
     assert db_user.todos == [todo]
+
+
+@pytest.mark.asyncio
+async def test_create_todo_state_field_error(
+    user: User, session: AsyncSession
+):
+    todo = Todo(
+        title='test title',
+        description='test desc',
+        state='test',  # type: ignore
+        user_id=user.id,
+    )
+
+    session.add(todo)
+    await session.commit()
+
+    with pytest.raises(LookupError):
+        await session.scalar(select(Todo))
