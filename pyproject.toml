@@ -25,6 +25,7 @@ dev = [
     "pytest-cov>=6.2.1",
     "ruff>=0.12.1",
     "taskipy>=1.14.1",
+    "testcontainers>=4.10.0",
 ]
 
 [tool.ruff]
