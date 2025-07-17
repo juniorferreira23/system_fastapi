@@ -7,7 +7,6 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.pool import StaticPool
 
 from src.app import app
 from src.database import get_session
@@ -30,11 +29,8 @@ def client(session):
 
 @pytest_asyncio.fixture
 async def session():
-    engine = create_async_engine(
-        'sqlite+aiosqlite:///:memory:',
-        connect_args={'check_same_thread': False},
-        poolclass=StaticPool,
-    )
+    engine = create_async_engine(Settings().DATABASE_URL)  # type: ignore
+
     async with engine.begin() as conn:
         await conn.run_sync(table_registry.metadata.create_all)
 

@@ -8,6 +8,7 @@ dependencies = [
     "aiosqlite>=0.21.0",
     "alembic>=1.16.2",
     "fastapi[standard]>=0.115.14",
+    "psycopg[binary]>=3.2.9",
     "pwdlib[argon2]>=0.2.1",
     "pydantic-settings>=2.10.1",
     "pyjwt>=2.10.1",
