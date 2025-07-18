@@ -23,7 +23,7 @@ CurrentUserAnnotated = Annotated[User, Depends(get_current_user)]
 
 
 @router.post('/token', status_code=HTTPStatus.OK, response_model=Token)
-async def login_for_acess_token(
+async def login_for_access_token(
     form_data: OAuth2FormAnnotated,
     session: SessionAnnotated,
 ):
