@@ -30,7 +30,7 @@ def create_access_token(data: dict):
     to_enconde = data.copy()
 
     expire = datetime.now(tz=ZoneInfo('UTC')) + timedelta(
-        minutes=settings.ACESS_TOKEN_EXPIRE_MINUTES
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
 
     to_enconde.update({'exp': expire})
